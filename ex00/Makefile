@@ -13,6 +13,7 @@ ARGS ?=
 
 ifeq ($(ISDEBUG), 1)
 	CXX +=  -g -fsanitize=address,undefined
+	CXXFLAGS += -DDEBUG
 endif
 
 all:	$(NAME)
