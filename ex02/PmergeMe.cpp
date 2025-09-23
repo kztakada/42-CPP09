@@ -107,27 +107,64 @@ void PmergeMe::_mergeInsertSortPairs(std::vector<std::pair<int, int> > &pairs) {
     if (pairs.size() <= 1)
         return;
 
-    // Extract larger elements and recursively sort by them
-    std::vector<int> largerElements;
+    // Create pairs with original indices to track them through sorting
+    std::vector<std::pair<std::pair<int, int>, size_t> > indexedPairs;
     for (size_t i = 0; i < pairs.size(); ++i) {
-        largerElements.push_back(pairs[i].first);
+        indexedPairs.push_back(
+            std::pair<std::pair<int, int>, size_t>(pairs[i], i));
     }
 
-    if (largerElements.size() > 1) {
-        largerElements = _mergeInsertSortVector(largerElements);
+    // Extract larger elements with their original indices
+    std::vector<std::pair<int, size_t> > largerWithIndex;
+    for (size_t i = 0; i < indexedPairs.size(); ++i) {
+        largerWithIndex.push_back(std::pair<int, size_t>(
+            indexedPairs[i].first.first, indexedPairs[i].second));
+    }
 
-        // Reorder pairs based on sorted larger elements
+    if (largerWithIndex.size() > 1) {
+        // Sort indexed larger elements by their values
+        _mergeInsertSortIndexedVector(largerWithIndex);
+
+        // Reorder pairs based on sorted indices
         std::vector<std::pair<int, int> > sortedPairs;
-        for (size_t i = 0; i < largerElements.size(); ++i) {
-            for (size_t j = 0; j < pairs.size(); ++j) {
-                if (pairs[j].first == largerElements[i]) {
-                    sortedPairs.push_back(pairs[j]);
-                    break;
-                }
-            }
+        for (size_t i = 0; i < largerWithIndex.size(); ++i) {
+            size_t originalIndex = largerWithIndex[i].second;
+            sortedPairs.push_back(pairs[originalIndex]);
         }
         pairs = sortedPairs;
     }
+}
+
+void PmergeMe::_mergeInsertSortIndexedVector(
+    std::vector<std::pair<int, size_t> > &indexedVec) {
+    if (indexedVec.size() <= 1)
+        return;
+
+    // Extract just the values for sorting
+    std::vector<int> values;
+    for (size_t i = 0; i < indexedVec.size(); ++i) {
+        values.push_back(indexedVec[i].first);
+    }
+
+    // Get the sorted values
+    std::vector<int> sortedValues = _mergeInsertSortVector(values);
+
+    // Create a mapping from sorted values back to original indices
+    // Handle duplicates by keeping track of used indices
+    std::vector<bool> used(indexedVec.size(), false);
+    std::vector<std::pair<int, size_t> > result;
+
+    for (size_t i = 0; i < sortedValues.size(); ++i) {
+        for (size_t j = 0; j < indexedVec.size(); ++j) {
+            if (!used[j] && indexedVec[j].first == sortedValues[i]) {
+                result.push_back(indexedVec[j]);
+                used[j] = true;
+                break;
+            }
+        }
+    }
+
+    indexedVec = result;
 }
 
 void PmergeMe::_binaryInsert(std::vector<int> &vec, int value, int end) {
@@ -236,27 +273,64 @@ void PmergeMe::_mergeInsertSortPairsDeque(
     if (pairs.size() <= 1)
         return;
 
-    // Extract larger elements and recursively sort by them
-    std::deque<int> largerElements;
+    // Create pairs with original indices to track them through sorting
+    std::deque<std::pair<std::pair<int, int>, size_t> > indexedPairs;
     for (size_t i = 0; i < pairs.size(); ++i) {
-        largerElements.push_back(pairs[i].first);
+        indexedPairs.push_back(
+            std::pair<std::pair<int, int>, size_t>(pairs[i], i));
     }
 
-    if (largerElements.size() > 1) {
-        largerElements = _mergeInsertSortDeque(largerElements);
+    // Extract larger elements with their original indices
+    std::deque<std::pair<int, size_t> > largerWithIndex;
+    for (size_t i = 0; i < indexedPairs.size(); ++i) {
+        largerWithIndex.push_back(std::pair<int, size_t>(
+            indexedPairs[i].first.first, indexedPairs[i].second));
+    }
 
-        // Reorder pairs based on sorted larger elements
+    if (largerWithIndex.size() > 1) {
+        // Sort indexed larger elements by their values
+        _mergeInsertSortIndexedDeque(largerWithIndex);
+
+        // Reorder pairs based on sorted indices
         std::deque<std::pair<int, int> > sortedPairs;
-        for (size_t i = 0; i < largerElements.size(); ++i) {
-            for (size_t j = 0; j < pairs.size(); ++j) {
-                if (pairs[j].first == largerElements[i]) {
-                    sortedPairs.push_back(pairs[j]);
-                    break;
-                }
-            }
+        for (size_t i = 0; i < largerWithIndex.size(); ++i) {
+            size_t originalIndex = largerWithIndex[i].second;
+            sortedPairs.push_back(pairs[originalIndex]);
         }
         pairs = sortedPairs;
     }
+}
+
+void PmergeMe::_mergeInsertSortIndexedDeque(
+    std::deque<std::pair<int, size_t> > &indexedDeq) {
+    if (indexedDeq.size() <= 1)
+        return;
+
+    // Extract just the values for sorting
+    std::deque<int> values;
+    for (size_t i = 0; i < indexedDeq.size(); ++i) {
+        values.push_back(indexedDeq[i].first);
+    }
+
+    // Get the sorted values
+    std::deque<int> sortedValues = _mergeInsertSortDeque(values);
+
+    // Create a mapping from sorted values back to original indices
+    // Handle duplicates by keeping track of used indices
+    std::deque<bool> used(indexedDeq.size(), false);
+    std::deque<std::pair<int, size_t> > result;
+
+    for (size_t i = 0; i < sortedValues.size(); ++i) {
+        for (size_t j = 0; j < indexedDeq.size(); ++j) {
+            if (!used[j] && indexedDeq[j].first == sortedValues[i]) {
+                result.push_back(indexedDeq[j]);
+                used[j] = true;
+                break;
+            }
+        }
+    }
+
+    indexedDeq = result;
 }
 
 void PmergeMe::_binaryInsert(std::deque<int> &deq, int value, int end) {

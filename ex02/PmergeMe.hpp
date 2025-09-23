@@ -22,6 +22,8 @@ class PmergeMe {
 
     std::vector<int> _mergeInsertSortVector(std::vector<int> &vec);
     void _mergeInsertSortPairs(std::vector<std::pair<int, int> > &pairs);
+    void _mergeInsertSortIndexedVector(
+        std::vector<std::pair<int, size_t> > &indexedVec);
     void _binaryInsert(std::vector<int> &vec, int value, int end);
     void _binaryInsertOptimized(std::vector<int> &vec, int value, int maxPos);
     void _insertWithJacobsthalOrder(
@@ -30,6 +32,8 @@ class PmergeMe {
 
     std::deque<int> _mergeInsertSortDeque(std::deque<int> &deq);
     void _mergeInsertSortPairsDeque(std::deque<std::pair<int, int> > &pairs);
+    void _mergeInsertSortIndexedDeque(
+        std::deque<std::pair<int, size_t> > &indexedDeq);
     void _binaryInsert(std::deque<int> &deq, int value, int end);
     void _binaryInsertOptimized(std::deque<int> &deq, int value, int maxPos);
     void _insertWithJacobsthalOrder(
