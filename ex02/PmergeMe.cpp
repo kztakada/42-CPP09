@@ -63,9 +63,20 @@ std::vector<int> PmergeMe::_mergeInsertSortVector(std::vector<int> &vec) {
         oddElement = vec[n - 1];
     }
 
-    // Step 2: Recursively sort the larger elements
-    if (larger.size() > 1)
-        larger = _mergeInsertSortVector(larger);
+    // Step 2: Recursively sort the larger elements with paired smaller elements
+    if (larger.size() > 1) {
+        std::vector<std::pair<int, int> > pairs;
+        for (size_t i = 0; i < larger.size(); ++i) {
+            pairs.push_back(std::pair<int, int>(larger[i], smaller[i]));
+        }
+        _mergeInsertSortPairs(pairs);
+
+        // Update both larger and smaller arrays based on sorted pairs
+        for (size_t i = 0; i < pairs.size(); ++i) {
+            larger[i] = pairs[i].first;
+            smaller[i] = pairs[i].second;
+        }
+    }
 
     // Step 3: Create result with all larger elements first
     std::vector<int> result;
@@ -73,9 +84,17 @@ std::vector<int> PmergeMe::_mergeInsertSortVector(std::vector<int> &vec) {
         result.push_back(larger[i]);
     }
 
-    // Step 4: Insert all smaller elements using Jacobsthal order
+    // Step 4: Insert smaller elements - first element (smaller[0]) goes to
+    // front unconditionally
     if (!smaller.empty()) {
-        _insertWithJacobsthalOrder(result, smaller);
+        result.insert(result.begin(), smaller[0]);
+
+        // Insert remaining smaller elements using Jacobsthal order
+        if (smaller.size() > 1) {
+            std::vector<int> remainingSmaller(
+                smaller.begin() + 1, smaller.end());
+            _insertWithJacobsthalOrder(result, remainingSmaller);
+        }
     }
 
     // Step 5: Insert odd element if it exists
@@ -86,9 +105,54 @@ std::vector<int> PmergeMe::_mergeInsertSortVector(std::vector<int> &vec) {
     return result;
 }
 
+void PmergeMe::_mergeInsertSortPairs(std::vector<std::pair<int, int> > &pairs) {
+    if (pairs.size() <= 1)
+        return;
+
+    // Extract larger elements and recursively sort by them
+    std::vector<int> largerElements;
+    for (size_t i = 0; i < pairs.size(); ++i) {
+        largerElements.push_back(pairs[i].first);
+    }
+
+    if (largerElements.size() > 1) {
+        largerElements = _mergeInsertSortVector(largerElements);
+
+        // Reorder pairs based on sorted larger elements
+        std::vector<std::pair<int, int> > sortedPairs;
+        for (size_t i = 0; i < largerElements.size(); ++i) {
+            for (size_t j = 0; j < pairs.size(); ++j) {
+                if (pairs[j].first == largerElements[i]) {
+                    sortedPairs.push_back(pairs[j]);
+                    break;
+                }
+            }
+        }
+        pairs = sortedPairs;
+    }
+}
+
 void PmergeMe::_binaryInsert(std::vector<int> &vec, int value, int end) {
     int left = 0;
     int right = end;
+
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        if (vec[mid] < value)
+            left = mid + 1;
+        else
+            right = mid;
+    }
+
+    vec.insert(vec.begin() + left, value);
+}
+
+void PmergeMe::_binaryInsertOptimized(
+    std::vector<int> &vec, int value, int maxPos) {
+    int left = 0;
+    int right = (maxPos < static_cast<int>(vec.size()))
+                    ? maxPos
+                    : static_cast<int>(vec.size());
 
     while (left < right) {
         int mid = left + (right - left) / 2;
@@ -129,9 +193,20 @@ std::deque<int> PmergeMe::_mergeInsertSortDeque(std::deque<int> &deq) {
         oddElement = deq[n - 1];
     }
 
-    // Step 2: Recursively sort the larger elements
-    if (larger.size() > 1)
-        larger = _mergeInsertSortDeque(larger);
+    // Step 2: Recursively sort the larger elements with paired smaller elements
+    if (larger.size() > 1) {
+        std::deque<std::pair<int, int> > pairs;
+        for (size_t i = 0; i < larger.size(); ++i) {
+            pairs.push_back(std::pair<int, int>(larger[i], smaller[i]));
+        }
+        _mergeInsertSortPairsDeque(pairs);
+
+        // Update both larger and smaller arrays based on sorted pairs
+        for (size_t i = 0; i < pairs.size(); ++i) {
+            larger[i] = pairs[i].first;
+            smaller[i] = pairs[i].second;
+        }
+    }
 
     // Step 3: Create result with all larger elements first
     std::deque<int> result;
@@ -139,9 +214,17 @@ std::deque<int> PmergeMe::_mergeInsertSortDeque(std::deque<int> &deq) {
         result.push_back(larger[i]);
     }
 
-    // Step 4: Insert all smaller elements using Jacobsthal order
+    // Step 4: Insert smaller elements - first element (smaller[0]) goes to
+    // front unconditionally
     if (!smaller.empty()) {
-        _insertWithJacobsthalOrder(result, smaller);
+        result.push_front(smaller[0]);
+
+        // Insert remaining smaller elements using Jacobsthal order
+        if (smaller.size() > 1) {
+            std::deque<int> remainingSmaller(
+                smaller.begin() + 1, smaller.end());
+            _insertWithJacobsthalOrder(result, remainingSmaller);
+        }
     }
 
     // Step 5: Insert odd element if it exists
@@ -152,9 +235,55 @@ std::deque<int> PmergeMe::_mergeInsertSortDeque(std::deque<int> &deq) {
     return result;
 }
 
+void PmergeMe::_mergeInsertSortPairsDeque(
+    std::deque<std::pair<int, int> > &pairs) {
+    if (pairs.size() <= 1)
+        return;
+
+    // Extract larger elements and recursively sort by them
+    std::deque<int> largerElements;
+    for (size_t i = 0; i < pairs.size(); ++i) {
+        largerElements.push_back(pairs[i].first);
+    }
+
+    if (largerElements.size() > 1) {
+        largerElements = _mergeInsertSortDeque(largerElements);
+
+        // Reorder pairs based on sorted larger elements
+        std::deque<std::pair<int, int> > sortedPairs;
+        for (size_t i = 0; i < largerElements.size(); ++i) {
+            for (size_t j = 0; j < pairs.size(); ++j) {
+                if (pairs[j].first == largerElements[i]) {
+                    sortedPairs.push_back(pairs[j]);
+                    break;
+                }
+            }
+        }
+        pairs = sortedPairs;
+    }
+}
+
 void PmergeMe::_binaryInsert(std::deque<int> &deq, int value, int end) {
     int left = 0;
     int right = end;
+
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        if (deq[mid] < value)
+            left = mid + 1;
+        else
+            right = mid;
+    }
+
+    deq.insert(deq.begin() + left, value);
+}
+
+void PmergeMe::_binaryInsertOptimized(
+    std::deque<int> &deq, int value, int maxPos) {
+    int left = 0;
+    int right = (maxPos < static_cast<int>(deq.size()))
+                    ? maxPos
+                    : static_cast<int>(deq.size());
 
     while (left < right) {
         int mid = left + (right - left) / 2;
@@ -219,6 +348,8 @@ void PmergeMe::_insertWithJacobsthalOrder(
         _generateJacobsthalSequence(smaller.size());
     std::vector<bool> inserted(smaller.size(), false);
 
+    size_t insertedCount = 0;
+
     // Insert elements according to Jacobsthal sequence
     for (size_t i = 0; i < jacobsthal.size(); ++i) {
         size_t groupEnd = jacobsthal[i];
@@ -231,8 +362,11 @@ void PmergeMe::_insertWithJacobsthalOrder(
         for (size_t j = groupEnd; j >= groupStart; --j) {
             size_t idx = j - 1;  // Convert to 0-based index
             if (idx < smaller.size() && !inserted[idx]) {
-                _binaryInsert(result, smaller[idx], result.size());
+                // Calculate maximum search position for this element
+                int maxPos = static_cast<int>(insertedCount + idx + 2);
+                _binaryInsertOptimized(result, smaller[idx], maxPos);
                 inserted[idx] = true;
+                insertedCount++;
             }
             if (j == groupStart)
                 break;  // Prevent underflow
@@ -256,6 +390,8 @@ void PmergeMe::_insertWithJacobsthalOrder(
         _generateJacobsthalSequenceDeque(smaller.size());
     std::deque<bool> inserted(smaller.size(), false);
 
+    size_t insertedCount = 0;
+
     // Insert elements according to Jacobsthal sequence
     for (size_t i = 0; i < jacobsthal.size(); ++i) {
         size_t groupEnd = jacobsthal[i];
@@ -268,8 +404,11 @@ void PmergeMe::_insertWithJacobsthalOrder(
         for (size_t j = groupEnd; j >= groupStart; --j) {
             size_t idx = j - 1;  // Convert to 0-based index
             if (idx < smaller.size() && !inserted[idx]) {
-                _binaryInsert(result, smaller[idx], result.size());
+                // Calculate maximum search position for this element
+                int maxPos = static_cast<int>(insertedCount + idx + 2);
+                _binaryInsertOptimized(result, smaller[idx], maxPos);
                 inserted[idx] = true;
+                insertedCount++;
             }
             if (j == groupStart)
                 break;  // Prevent underflow
