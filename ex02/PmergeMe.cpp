@@ -40,52 +40,43 @@ std::vector<int> PmergeMe::_mergeInsertSortVector(std::vector<int> &vec) {
     if (n <= 1)
         return vec;
 
-    // Step 1: Create pairs and ensure larger element is first in each pair
-    std::vector<int> larger;
-    std::vector<int> smaller;
+    // Handle odd element
     bool hasOddElement = false;
     int oddElement = 0;
-
-    // Process pairs
-    for (size_t i = 0; i < n - 1; i += 2) {
-        if (vec[i] > vec[i + 1]) {
-            larger.push_back(vec[i]);
-            smaller.push_back(vec[i + 1]);
-        } else {
-            larger.push_back(vec[i + 1]);
-            smaller.push_back(vec[i]);
-        }
-    }
-
-    // Handle odd element
     if (n % 2 == 1) {
         hasOddElement = true;
         oddElement = vec[n - 1];
     }
 
-    // Step 2: Recursively sort the larger elements with paired smaller elements
-    if (larger.size() > 1) {
-        std::vector<std::pair<int, int> > pairs;
-        for (size_t i = 0; i < larger.size(); ++i) {
-            pairs.push_back(std::pair<int, int>(larger[i], smaller[i]));
+    // Step 1&2 Combined: Create pairs and recursively sort them
+    std::vector<std::pair<int, int> > pairs;
+    for (size_t i = 0; i < n - 1; i += 2) {
+        if (vec[i] > vec[i + 1]) {
+            pairs.push_back(std::pair<int, int>(vec[i], vec[i + 1]));
+        } else {
+            pairs.push_back(std::pair<int, int>(vec[i + 1], vec[i]));
         }
-        _mergeInsertSortPairs(pairs);
+    }
 
-        // Update both larger and smaller arrays based on sorted pairs
-        for (size_t i = 0; i < pairs.size(); ++i) {
-            larger[i] = pairs[i].first;
-            smaller[i] = pairs[i].second;
-        }
+    // Recursively sort pairs if more than one
+    if (pairs.size() > 1) {
+        _mergeInsertSortPairs(pairs);
     }
 
     // Step 3: Create result with all larger elements first
     std::vector<int> result;
-    for (size_t i = 0; i < larger.size(); ++i) {
-        result.push_back(larger[i]);
+    for (size_t i = 0; i < pairs.size(); ++i) {
+        result.push_back(pairs[i].first);
     }
 
     // Step 4: Insert smaller elements using Ford-Johnson order
-    if (!smaller.empty()) {
+    if (!pairs.empty()) {
+        // Extract smaller elements for insertion
+        std::vector<int> smaller;
+        for (size_t i = 0; i < pairs.size(); ++i) {
+            smaller.push_back(pairs[i].second);
+        }
+
         // smaller[0] is inserted first (unconditionally at the front)
         result.insert(result.begin(), smaller[0]);
 
@@ -205,52 +196,43 @@ std::deque<int> PmergeMe::_mergeInsertSortDeque(std::deque<int> &deq) {
     if (n <= 1)
         return deq;
 
-    // Step 1: Create pairs and ensure larger element is first in each pair
-    std::deque<int> larger;
-    std::deque<int> smaller;
+    // Handle odd element
     bool hasOddElement = false;
     int oddElement = 0;
-
-    // Process pairs
-    for (size_t i = 0; i < n - 1; i += 2) {
-        if (deq[i] > deq[i + 1]) {
-            larger.push_back(deq[i]);
-            smaller.push_back(deq[i + 1]);
-        } else {
-            larger.push_back(deq[i + 1]);
-            smaller.push_back(deq[i]);
-        }
-    }
-
-    // Handle odd element
     if (n % 2 == 1) {
         hasOddElement = true;
         oddElement = deq[n - 1];
     }
 
-    // Step 2: Recursively sort the larger elements with paired smaller elements
-    if (larger.size() > 1) {
-        std::deque<std::pair<int, int> > pairs;
-        for (size_t i = 0; i < larger.size(); ++i) {
-            pairs.push_back(std::pair<int, int>(larger[i], smaller[i]));
+    // Step 1&2 Combined: Create pairs and recursively sort them
+    std::deque<std::pair<int, int> > pairs;
+    for (size_t i = 0; i < n - 1; i += 2) {
+        if (deq[i] > deq[i + 1]) {
+            pairs.push_back(std::pair<int, int>(deq[i], deq[i + 1]));
+        } else {
+            pairs.push_back(std::pair<int, int>(deq[i + 1], deq[i]));
         }
-        _mergeInsertSortPairsDeque(pairs);
+    }
 
-        // Update both larger and smaller arrays based on sorted pairs
-        for (size_t i = 0; i < pairs.size(); ++i) {
-            larger[i] = pairs[i].first;
-            smaller[i] = pairs[i].second;
-        }
+    // Recursively sort pairs if more than one
+    if (pairs.size() > 1) {
+        _mergeInsertSortPairsDeque(pairs);
     }
 
     // Step 3: Create result with all larger elements first
     std::deque<int> result;
-    for (size_t i = 0; i < larger.size(); ++i) {
-        result.push_back(larger[i]);
+    for (size_t i = 0; i < pairs.size(); ++i) {
+        result.push_back(pairs[i].first);
     }
 
     // Step 4: Insert smaller elements using Ford-Johnson order
-    if (!smaller.empty()) {
+    if (!pairs.empty()) {
+        // Extract smaller elements for insertion
+        std::deque<int> smaller;
+        for (size_t i = 0; i < pairs.size(); ++i) {
+            smaller.push_back(pairs[i].second);
+        }
+
         // smaller[0] is inserted first (unconditionally at the front)
         result.push_front(smaller[0]);
 
