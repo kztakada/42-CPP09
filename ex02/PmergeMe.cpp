@@ -1,5 +1,7 @@
 #include "PmergeMe.hpp"
 
+#include <iostream>
+
 PmergeMe::PmergeMe() : _unsortedVec(), _unsortedDeq() {}
 PmergeMe::PmergeMe(std::vector<int> const &vec)
     : _unsortedVec(vec), _unsortedDeq(vec.begin(), vec.end()) {}
@@ -25,13 +27,13 @@ std::vector<int> PmergeMe::mergeInsertSortByVector() {
         return _unsortedVec;
 
     // Create indexed vector from unsorted vector
-    std::vector<std::pair<int, size_t> > indexedVec;
+    std::vector<IndexedInt> indexedVec;
     for (size_t i = 0; i < _unsortedVec.size(); ++i) {
-        indexedVec.push_back(std::pair<int, size_t>(_unsortedVec[i], i));
+        indexedVec.push_back(IndexedInt(_unsortedVec[i], i));
     }
 
     // Sort the indexed vector
-    std::vector<std::pair<int, size_t> > sortedIndexedVec =
+    std::vector<IndexedInt> sortedIndexedVec =
         _mergeInsertSortVector(indexedVec);
 
     // Extract the sorted values
@@ -48,14 +50,13 @@ std::deque<int> PmergeMe::mergeInsertSortByDeque() {
         return _unsortedDeq;
 
     // Create indexed deque from unsorted deque
-    std::deque<std::pair<int, size_t> > indexedDeq;
+    std::deque<IndexedInt> indexedDeq;
     for (size_t i = 0; i < _unsortedDeq.size(); ++i) {
-        indexedDeq.push_back(std::pair<int, size_t>(_unsortedDeq[i], i));
+        indexedDeq.push_back(IndexedInt(_unsortedDeq[i], i));
     }
 
     // Sort the indexed deque
-    std::deque<std::pair<int, size_t> > sortedIndexedDeq =
-        _mergeInsertSortDeque(indexedDeq);
+    std::deque<IndexedInt> sortedIndexedDeq = _mergeInsertSortDeque(indexedDeq);
 
     // Extract the sorted values
     std::deque<int> result;
@@ -69,43 +70,44 @@ std::deque<int> PmergeMe::mergeInsertSortByDeque() {
 // ----------------------------------------------------------------
 // private member functions
 
-std::vector<std::pair<int, size_t> > PmergeMe::_mergeInsertSortVector(
-    std::vector<std::pair<int, size_t> > &indexedVec) {
+std::vector<PmergeMe::IndexedInt> PmergeMe::_mergeInsertSortVector(
+    std::vector<IndexedInt> &indexedVec) {
     size_t n = indexedVec.size();
     if (n <= 1)
         return indexedVec;
 
     // Handle odd element
     bool hasOddElement = false;
-    std::pair<int, size_t> oddElement;
+    IndexedInt oddElement;
     if (n % 2 == 1) {
         hasOddElement = true;
         oddElement = indexedVec[n - 1];
     }
 
     // Step 1&2 Combined: Create pairs and recursively sort them
-    std::vector<std::pair<std::pair<int, size_t>, std::pair<int, size_t> > >
-        pairs;
+    std::vector<std::pair<IndexedInt, IndexedInt> > pairs;
     for (size_t i = 0; i < n - 1; i += 2) {
+#ifdef DEBUG
+        std::cout << "Vector Compare: (" << indexedVec[i].first << ", "
+                  << indexedVec[i + 1].first << ")\n";
+#endif
         if (indexedVec[i].first > indexedVec[i + 1].first) {
-            pairs.push_back(
-                std::pair<std::pair<int, size_t>, std::pair<int, size_t> >(
-                    indexedVec[i], indexedVec[i + 1]));
+            pairs.push_back(std::pair<IndexedInt, IndexedInt>(
+                indexedVec[i], indexedVec[i + 1]));
         } else {
-            pairs.push_back(
-                std::pair<std::pair<int, size_t>, std::pair<int, size_t> >(
-                    indexedVec[i + 1], indexedVec[i]));
+            pairs.push_back(std::pair<IndexedInt, IndexedInt>(
+                indexedVec[i + 1], indexedVec[i]));
         }
     }
 
     // Create mapping for recursive sorting of pairs
-    std::vector<std::pair<int, size_t> > pairLarger;
+    std::vector<IndexedInt> pairLarger;
     for (size_t i = 0; i < pairs.size(); ++i) {
-        pairLarger.push_back(std::pair<int, size_t>(pairs[i].first.first, i));
+        pairLarger.push_back(IndexedInt(pairs[i].first.first, i));
     }
 
     // Recursively sort pairs if more than one
-    std::vector<std::pair<int, size_t> > sortedPairLarger;
+    std::vector<IndexedInt> sortedPairLarger;
     if (pairLarger.size() > 1) {
         sortedPairLarger = _mergeInsertSortVector(pairLarger);
     } else {
@@ -113,7 +115,7 @@ std::vector<std::pair<int, size_t> > PmergeMe::_mergeInsertSortVector(
     }
 
     // Step 3: Create result with all larger elements first
-    std::vector<std::pair<int, size_t> > result;
+    std::vector<IndexedInt> result;
     for (size_t i = 0; i < sortedPairLarger.size(); ++i) {
         size_t pairIdx = sortedPairLarger[i].second;
         result.push_back(pairs[pairIdx].first);
@@ -122,7 +124,7 @@ std::vector<std::pair<int, size_t> > PmergeMe::_mergeInsertSortVector(
     // Step 4: Insert smaller elements using Ford-Johnson order
     if (!pairs.empty()) {
         // Extract smaller elements for insertion
-        std::vector<std::pair<int, size_t> > smaller;
+        std::vector<IndexedInt> smaller;
         for (size_t i = 0; i < sortedPairLarger.size(); ++i) {
             size_t pairIdx = sortedPairLarger[i].second;
             smaller.push_back(pairs[pairIdx].second);
@@ -146,13 +148,17 @@ std::vector<std::pair<int, size_t> > PmergeMe::_mergeInsertSortVector(
     return result;
 }
 
-void PmergeMe::_binaryInsert(std::vector<std::pair<int, size_t> > &vec,
-    const std::pair<int, size_t> &value, int end) {
+void PmergeMe::_binaryInsert(
+    std::vector<IndexedInt> &vec, const IndexedInt &value, int end) {
     int left = 0;
     int right = end;
 
     while (left < right) {
         int mid = left + (right - left) / 2;
+#ifdef DEBUG
+        std::cout << "Vector Compare: (" << vec[mid].first << ", "
+                  << value.first << ")\n";
+#endif
         if (vec[mid].first < value.first)
             left = mid + 1;
         else
@@ -162,8 +168,8 @@ void PmergeMe::_binaryInsert(std::vector<std::pair<int, size_t> > &vec,
     vec.insert(vec.begin() + left, value);
 }
 
-void PmergeMe::_binaryInsertOptimized(std::vector<std::pair<int, size_t> > &vec,
-    const std::pair<int, size_t> &value, int maxPos) {
+void PmergeMe::_binaryInsertOptimized(
+    std::vector<IndexedInt> &vec, const IndexedInt &value, int maxPos) {
     int left = 0;
     int right = (maxPos < static_cast<int>(vec.size()))
                     ? maxPos
@@ -171,6 +177,10 @@ void PmergeMe::_binaryInsertOptimized(std::vector<std::pair<int, size_t> > &vec,
 
     while (left < right) {
         int mid = left + (right - left) / 2;
+#ifdef DEBUG
+        std::cout << "Vector Compare: (" << vec[mid].first << ", "
+                  << value.first << ")\n";
+#endif
         if (vec[mid].first < value.first)
             left = mid + 1;
         else
@@ -180,43 +190,44 @@ void PmergeMe::_binaryInsertOptimized(std::vector<std::pair<int, size_t> > &vec,
     vec.insert(vec.begin() + left, value);
 }
 
-std::deque<std::pair<int, size_t> > PmergeMe::_mergeInsertSortDeque(
-    std::deque<std::pair<int, size_t> > &indexedDeq) {
+std::deque<PmergeMe::IndexedInt> PmergeMe::_mergeInsertSortDeque(
+    std::deque<IndexedInt> &indexedDeq) {
     size_t n = indexedDeq.size();
     if (n <= 1)
         return indexedDeq;
 
     // Handle odd element
     bool hasOddElement = false;
-    std::pair<int, size_t> oddElement;
+    IndexedInt oddElement;
     if (n % 2 == 1) {
         hasOddElement = true;
         oddElement = indexedDeq[n - 1];
     }
 
     // Step 1&2 Combined: Create pairs and recursively sort them
-    std::deque<std::pair<std::pair<int, size_t>, std::pair<int, size_t> > >
-        pairs;
+    std::deque<std::pair<IndexedInt, IndexedInt> > pairs;
     for (size_t i = 0; i < n - 1; i += 2) {
+#ifdef DEBUG
+        std::cout << "Deque Compare: (" << indexedDeq[i].first << ", "
+                  << indexedDeq[i + 1].first << ")\n";
+#endif
         if (indexedDeq[i].first > indexedDeq[i + 1].first) {
-            pairs.push_back(
-                std::pair<std::pair<int, size_t>, std::pair<int, size_t> >(
-                    indexedDeq[i], indexedDeq[i + 1]));
+            pairs.push_back(std::pair<IndexedInt, IndexedInt>(
+                indexedDeq[i], indexedDeq[i + 1]));
         } else {
-            pairs.push_back(
-                std::pair<std::pair<int, size_t>, std::pair<int, size_t> >(
-                    indexedDeq[i + 1], indexedDeq[i]));
+            pairs.push_back(std::pair<IndexedInt, IndexedInt>(
+                indexedDeq[i + 1], indexedDeq[i]));
         }
     }
 
     // Create mapping for recursive sorting of pairs
-    std::deque<std::pair<int, size_t> > pairLarger;
+    std::deque<IndexedInt> pairLarger;
     for (size_t i = 0; i < pairs.size(); ++i) {
-        pairLarger.push_back(std::pair<int, size_t>(pairs[i].first.first, i));
+        pairLarger.push_back(IndexedInt(pairs[i].first.first, i));
     }
 
     // Recursively sort pairs if more than one
-    std::deque<std::pair<int, size_t> > sortedPairLarger;
+    std::deque<IndexedInt> sortedPairLarger;
     if (pairLarger.size() > 1) {
         sortedPairLarger = _mergeInsertSortDeque(pairLarger);
     } else {
@@ -224,7 +235,7 @@ std::deque<std::pair<int, size_t> > PmergeMe::_mergeInsertSortDeque(
     }
 
     // Step 3: Create result with all larger elements first
-    std::deque<std::pair<int, size_t> > result;
+    std::deque<IndexedInt> result;
     for (size_t i = 0; i < sortedPairLarger.size(); ++i) {
         size_t pairIdx = sortedPairLarger[i].second;
         result.push_back(pairs[pairIdx].first);
@@ -233,7 +244,7 @@ std::deque<std::pair<int, size_t> > PmergeMe::_mergeInsertSortDeque(
     // Step 4: Insert smaller elements using Ford-Johnson order
     if (!pairs.empty()) {
         // Extract smaller elements for insertion
-        std::deque<std::pair<int, size_t> > smaller;
+        std::deque<IndexedInt> smaller;
         for (size_t i = 0; i < sortedPairLarger.size(); ++i) {
             size_t pairIdx = sortedPairLarger[i].second;
             smaller.push_back(pairs[pairIdx].second);
@@ -257,13 +268,17 @@ std::deque<std::pair<int, size_t> > PmergeMe::_mergeInsertSortDeque(
     return result;
 }
 
-void PmergeMe::_binaryInsert(std::deque<std::pair<int, size_t> > &deq,
-    const std::pair<int, size_t> &value, int end) {
+void PmergeMe::_binaryInsert(
+    std::deque<IndexedInt> &deq, const IndexedInt &value, int end) {
     int left = 0;
     int right = end;
 
     while (left < right) {
         int mid = left + (right - left) / 2;
+#ifdef DEBUG
+        std::cout << "Deque Compare: (" << deq[mid].first << ", " << value.first
+                  << ")\n";
+#endif
         if (deq[mid].first < value.first)
             left = mid + 1;
         else
@@ -273,8 +288,8 @@ void PmergeMe::_binaryInsert(std::deque<std::pair<int, size_t> > &deq,
     deq.insert(deq.begin() + left, value);
 }
 
-void PmergeMe::_binaryInsertOptimized(std::deque<std::pair<int, size_t> > &deq,
-    const std::pair<int, size_t> &value, int maxPos) {
+void PmergeMe::_binaryInsertOptimized(
+    std::deque<IndexedInt> &deq, const IndexedInt &value, int maxPos) {
     int left = 0;
     int right = (maxPos < static_cast<int>(deq.size()))
                     ? maxPos
@@ -282,6 +297,10 @@ void PmergeMe::_binaryInsertOptimized(std::deque<std::pair<int, size_t> > &deq,
 
     while (left < right) {
         int mid = left + (right - left) / 2;
+#ifdef DEBUG
+        std::cout << "Deque Compare: (" << deq[mid].first << ", " << value.first
+                  << ")\n";
+#endif
         if (deq[mid].first < value.first)
             left = mid + 1;
         else
@@ -341,8 +360,7 @@ std::deque<size_t> PmergeMe::_generateJacobsthalSequenceDeque(size_t n) {
 }
 
 void PmergeMe::_insertWithJacobsthalOrder(
-    std::vector<std::pair<int, size_t> > &result,
-    std::vector<std::pair<int, size_t> > const &smaller) {
+    std::vector<IndexedInt> &result, std::vector<IndexedInt> const &smaller) {
     if (smaller.size() <= 1)
         return;
 
@@ -383,8 +401,7 @@ void PmergeMe::_insertWithJacobsthalOrder(
 }
 
 void PmergeMe::_insertWithJacobsthalOrder(
-    std::deque<std::pair<int, size_t> > &result,
-    std::deque<std::pair<int, size_t> > const &smaller) {
+    std::deque<IndexedInt> &result, std::deque<IndexedInt> const &smaller) {
     if (smaller.size() <= 1)
         return;
 
