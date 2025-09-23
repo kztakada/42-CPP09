@@ -42,7 +42,8 @@ int RPN::evaluate(const std::string &expression) {
 // ----------------------------------------------------------------
 // Static private members
 
-std::stack<int> RPN::_stack = std::stack<int>();
+std::stack<int, std::list<int> > RPN::_stack =
+    std::stack<int, std::list<int> >();
 
 bool RPN::_isOperator(char c) {
     return c == '+' || c == '-' || c == '*' || c == '/';

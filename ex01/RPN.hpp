@@ -2,6 +2,7 @@
 #define RPN_HPP
 
 #include <exception>
+#include <list>
 #include <stack>
 #include <stdexcept>
 #include <string>
@@ -11,7 +12,7 @@ class RPN {
     static int evaluate(const std::string &expression);
 
    private:
-    static std::stack<int> _stack;
+    static std::stack<int, std::list<int> > _stack;
 
     static bool _isOperator(char c);
     static int _applyOperator(char op, int a, int b);
