@@ -84,16 +84,14 @@ std::vector<int> PmergeMe::_mergeInsertSortVector(std::vector<int> &vec) {
         result.push_back(larger[i]);
     }
 
-    // Step 4: Insert smaller elements - first element (smaller[0]) goes to
-    // front unconditionally
+    // Step 4: Insert smaller elements using Ford-Johnson order
     if (!smaller.empty()) {
+        // smaller[0] is inserted first (unconditionally at the front)
         result.insert(result.begin(), smaller[0]);
 
-        // Insert remaining smaller elements using Jacobsthal order
+        // Insert remaining elements in Ford-Johnson order
         if (smaller.size() > 1) {
-            std::vector<int> remainingSmaller(
-                smaller.begin() + 1, smaller.end());
-            _insertWithJacobsthalOrder(result, remainingSmaller);
+            _insertWithJacobsthalOrder(result, smaller);
         }
     }
 
@@ -214,16 +212,14 @@ std::deque<int> PmergeMe::_mergeInsertSortDeque(std::deque<int> &deq) {
         result.push_back(larger[i]);
     }
 
-    // Step 4: Insert smaller elements - first element (smaller[0]) goes to
-    // front unconditionally
+    // Step 4: Insert smaller elements using Ford-Johnson order
     if (!smaller.empty()) {
+        // smaller[0] is inserted first (unconditionally at the front)
         result.push_front(smaller[0]);
 
-        // Insert remaining smaller elements using Jacobsthal order
+        // Insert remaining elements in Ford-Johnson order
         if (smaller.size() > 1) {
-            std::deque<int> remainingSmaller(
-                smaller.begin() + 1, smaller.end());
-            _insertWithJacobsthalOrder(result, remainingSmaller);
+            _insertWithJacobsthalOrder(result, smaller);
         }
     }
 
@@ -296,77 +292,81 @@ void PmergeMe::_binaryInsertOptimized(
     deq.insert(deq.begin() + left, value);
 }
 
-// Generate Jacobsthal sequence for insertion order: 1, 3, 5, 11, 21, 43, ...
+// Generate Ford-Johnson group endpoints for insertion order
 std::vector<size_t> PmergeMe::_generateJacobsthalSequence(size_t n) {
-    std::vector<size_t> jacobsthal;
+    std::vector<size_t> endpoints;
     if (n == 0)
-        return jacobsthal;
+        return endpoints;
 
-    size_t j1 = 1;  // t_1 = 1
-    size_t j2 = 1;  // t_0 = 1
-    jacobsthal.push_back(j1);
+    size_t power = 1;
+    while (true) {
+        // Calculate (3 * 2^k - 2 * (-1)^k) / 3 for group endpoints
+        size_t endpoint;
+        if (power % 2 == 1) {  // k is odd, (-1)^k = -1
+            endpoint = (3 * power + 2) / 3;
+        } else {  // k is even, (-1)^k = 1
+            endpoint = (3 * power - 2) / 3;
+        }
 
-    while (j1 < n) {
-        size_t next = 2 * j1 + j2;  // t_k = 2 * t_{k-1} + t_{k-2}
-        if (next > n)
+        if (endpoint > n)
             break;
-        jacobsthal.push_back(next);
-        j2 = j1;
-        j1 = next;
+        endpoints.push_back(endpoint);
+        power *= 2;
     }
 
-    return jacobsthal;
+    return endpoints;
 }
 
 std::deque<size_t> PmergeMe::_generateJacobsthalSequenceDeque(size_t n) {
-    std::deque<size_t> jacobsthal;
+    std::deque<size_t> endpoints;
     if (n == 0)
-        return jacobsthal;
+        return endpoints;
 
-    size_t j1 = 1;  // t_1 = 1
-    size_t j2 = 1;  // t_0 = 1
-    jacobsthal.push_back(j1);
+    size_t power = 1;
+    while (true) {
+        // Calculate (3 * 2^k - 2 * (-1)^k) / 3 for group endpoints
+        size_t endpoint;
+        if (power % 2 == 1) {  // k is odd, (-1)^k = -1
+            endpoint = (3 * power + 2) / 3;
+        } else {  // k is even, (-1)^k = 1
+            endpoint = (3 * power - 2) / 3;
+        }
 
-    while (j1 < n) {
-        size_t next = 2 * j1 + j2;  // t_k = 2 * t_{k-1} + t_{k-2}
-        if (next > n)
+        if (endpoint > n)
             break;
-        jacobsthal.push_back(next);
-        j2 = j1;
-        j1 = next;
+        endpoints.push_back(endpoint);
+        power *= 2;
     }
 
-    return jacobsthal;
+    return endpoints;
 }
 
 void PmergeMe::_insertWithJacobsthalOrder(
     std::vector<int> &result, std::vector<int> const &smaller) {
-    if (smaller.empty())
+    if (smaller.size() <= 1)
         return;
 
-    std::vector<size_t> jacobsthal =
-        _generateJacobsthalSequence(smaller.size());
+    std::vector<size_t> endpoints = _generateJacobsthalSequence(
+        smaller.size() - 1);  // -1 because smaller[0] is already inserted
     std::vector<bool> inserted(smaller.size(), false);
+    inserted[0] = true;  // smaller[0] is already inserted
 
-    size_t insertedCount = 0;
+    // Insert elements according to Ford-Johnson group endpoints
+    for (size_t i = 0; i < endpoints.size(); ++i) {
+        size_t groupEnd =
+            endpoints[i];  // 1-based index from smaller[1] onwards
+        if (groupEnd >= smaller.size())
+            groupEnd = smaller.size() - 1;
 
-    // Insert elements according to Jacobsthal sequence
-    for (size_t i = 0; i < jacobsthal.size(); ++i) {
-        size_t groupEnd = jacobsthal[i];
-        if (groupEnd > smaller.size())
-            groupEnd = smaller.size();
-
-        size_t groupStart = (i == 0) ? 1 : jacobsthal[i - 1] + 1;
+        size_t groupStart = (i == 0) ? 1 : endpoints[i - 1] + 1;
 
         // Insert elements in reverse order within each group
         for (size_t j = groupEnd; j >= groupStart; --j) {
-            size_t idx = j - 1;  // Convert to 0-based index
-            if (idx < smaller.size() && !inserted[idx]) {
+            if (j < smaller.size() && !inserted[j]) {
                 // Calculate maximum search position for this element
-                int maxPos = static_cast<int>(insertedCount + idx + 2);
-                _binaryInsertOptimized(result, smaller[idx], maxPos);
-                inserted[idx] = true;
-                insertedCount++;
+                int maxPos = static_cast<int>(result.size());
+                _binaryInsertOptimized(result, smaller[j], maxPos);
+                inserted[j] = true;
             }
             if (j == groupStart)
                 break;  // Prevent underflow
@@ -374,7 +374,8 @@ void PmergeMe::_insertWithJacobsthalOrder(
     }
 
     // Insert any remaining elements
-    for (size_t i = 0; i < smaller.size(); ++i) {
+    for (size_t i = 1; i < smaller.size();
+        ++i) {  // Start from 1, skip smaller[0]
         if (!inserted[i]) {
             _binaryInsert(result, smaller[i], result.size());
         }
@@ -383,32 +384,30 @@ void PmergeMe::_insertWithJacobsthalOrder(
 
 void PmergeMe::_insertWithJacobsthalOrder(
     std::deque<int> &result, std::deque<int> const &smaller) {
-    if (smaller.empty())
+    if (smaller.size() <= 1)
         return;
 
-    std::deque<size_t> jacobsthal =
-        _generateJacobsthalSequenceDeque(smaller.size());
+    std::deque<size_t> endpoints = _generateJacobsthalSequenceDeque(
+        smaller.size() - 1);  // -1 because smaller[0] is already inserted
     std::deque<bool> inserted(smaller.size(), false);
+    inserted[0] = true;  // smaller[0] is already inserted
 
-    size_t insertedCount = 0;
+    // Insert elements according to Ford-Johnson group endpoints
+    for (size_t i = 0; i < endpoints.size(); ++i) {
+        size_t groupEnd =
+            endpoints[i];  // 1-based index from smaller[1] onwards
+        if (groupEnd >= smaller.size())
+            groupEnd = smaller.size() - 1;
 
-    // Insert elements according to Jacobsthal sequence
-    for (size_t i = 0; i < jacobsthal.size(); ++i) {
-        size_t groupEnd = jacobsthal[i];
-        if (groupEnd > smaller.size())
-            groupEnd = smaller.size();
-
-        size_t groupStart = (i == 0) ? 1 : jacobsthal[i - 1] + 1;
+        size_t groupStart = (i == 0) ? 1 : endpoints[i - 1] + 1;
 
         // Insert elements in reverse order within each group
         for (size_t j = groupEnd; j >= groupStart; --j) {
-            size_t idx = j - 1;  // Convert to 0-based index
-            if (idx < smaller.size() && !inserted[idx]) {
+            if (j < smaller.size() && !inserted[j]) {
                 // Calculate maximum search position for this element
-                int maxPos = static_cast<int>(insertedCount + idx + 2);
-                _binaryInsertOptimized(result, smaller[idx], maxPos);
-                inserted[idx] = true;
-                insertedCount++;
+                int maxPos = static_cast<int>(result.size());
+                _binaryInsertOptimized(result, smaller[j], maxPos);
+                inserted[j] = true;
             }
             if (j == groupStart)
                 break;  // Prevent underflow
@@ -416,7 +415,8 @@ void PmergeMe::_insertWithJacobsthalOrder(
     }
 
     // Insert any remaining elements
-    for (size_t i = 0; i < smaller.size(); ++i) {
+    for (size_t i = 1; i < smaller.size();
+        ++i) {  // Start from 1, skip smaller[0]
         if (!inserted[i]) {
             _binaryInsert(result, smaller[i], result.size());
         }
