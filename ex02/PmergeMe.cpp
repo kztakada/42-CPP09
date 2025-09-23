@@ -67,20 +67,15 @@ std::vector<int> PmergeMe::_mergeInsertSortVector(std::vector<int> &vec) {
     if (larger.size() > 1)
         larger = _mergeInsertSortVector(larger);
 
-    // Step 3: Create result starting with the first smaller element and all
-    // larger elements
+    // Step 3: Create result with all larger elements first
     std::vector<int> result;
-    if (!smaller.empty())
-        result.push_back(smaller[0]);
-
     for (size_t i = 0; i < larger.size(); ++i) {
         result.push_back(larger[i]);
     }
 
-    // Step 4: Insert remaining smaller elements using Jacobsthal order
-    if (smaller.size() > 1) {
-        std::vector<int> remainingSmaller(smaller.begin() + 1, smaller.end());
-        _insertWithJacobsthalOrder(result, remainingSmaller);
+    // Step 4: Insert all smaller elements using Jacobsthal order
+    if (!smaller.empty()) {
+        _insertWithJacobsthalOrder(result, smaller);
     }
 
     // Step 5: Insert odd element if it exists
@@ -138,20 +133,15 @@ std::deque<int> PmergeMe::_mergeInsertSortDeque(std::deque<int> &deq) {
     if (larger.size() > 1)
         larger = _mergeInsertSortDeque(larger);
 
-    // Step 3: Create result starting with the first smaller element and all
-    // larger elements
+    // Step 3: Create result with all larger elements first
     std::deque<int> result;
-    if (!smaller.empty())
-        result.push_back(smaller[0]);
-
     for (size_t i = 0; i < larger.size(); ++i) {
         result.push_back(larger[i]);
     }
 
-    // Step 4: Insert remaining smaller elements using Jacobsthal order
-    if (smaller.size() > 1) {
-        std::deque<int> remainingSmaller(smaller.begin() + 1, smaller.end());
-        _insertWithJacobsthalOrder(result, remainingSmaller);
+    // Step 4: Insert all smaller elements using Jacobsthal order
+    if (!smaller.empty()) {
+        _insertWithJacobsthalOrder(result, smaller);
     }
 
     // Step 5: Insert odd element if it exists
@@ -232,15 +222,20 @@ void PmergeMe::_insertWithJacobsthalOrder(
     // Insert elements according to Jacobsthal sequence
     for (size_t i = 0; i < jacobsthal.size(); ++i) {
         size_t groupEnd = jacobsthal[i];
+        if (groupEnd > smaller.size())
+            groupEnd = smaller.size();
+
         size_t groupStart = (i == 0) ? 1 : jacobsthal[i - 1] + 1;
 
         // Insert elements in reverse order within each group
-        for (size_t j = groupEnd; j >= groupStart && j <= smaller.size(); --j) {
+        for (size_t j = groupEnd; j >= groupStart; --j) {
             size_t idx = j - 1;  // Convert to 0-based index
-            if (!inserted[idx]) {
+            if (idx < smaller.size() && !inserted[idx]) {
                 _binaryInsert(result, smaller[idx], result.size());
                 inserted[idx] = true;
             }
+            if (j == groupStart)
+                break;  // Prevent underflow
         }
     }
 
@@ -264,15 +259,20 @@ void PmergeMe::_insertWithJacobsthalOrder(
     // Insert elements according to Jacobsthal sequence
     for (size_t i = 0; i < jacobsthal.size(); ++i) {
         size_t groupEnd = jacobsthal[i];
+        if (groupEnd > smaller.size())
+            groupEnd = smaller.size();
+
         size_t groupStart = (i == 0) ? 1 : jacobsthal[i - 1] + 1;
 
         // Insert elements in reverse order within each group
-        for (size_t j = groupEnd; j >= groupStart && j <= smaller.size(); --j) {
+        for (size_t j = groupEnd; j >= groupStart; --j) {
             size_t idx = j - 1;  // Convert to 0-based index
-            if (!inserted[idx]) {
+            if (idx < smaller.size() && !inserted[idx]) {
                 _binaryInsert(result, smaller[idx], result.size());
                 inserted[idx] = true;
             }
+            if (j == groupStart)
+                break;  // Prevent underflow
         }
     }
 

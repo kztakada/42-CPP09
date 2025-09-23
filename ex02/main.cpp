@@ -67,15 +67,6 @@ int main(int argc, char *argv[]) {
 
     PmergeMe pmergeMe(numbers);
 
-    // Print original sequence
-    std::cout << "Before: ";
-    for (size_t i = 0; i < numbers.size(); ++i) {
-        std::cout << numbers[i];
-        if (i != numbers.size() - 1)
-            std::cout << " ";
-    }
-    std::cout << std::endl;
-
     std::clock_t start, end;
     // Sort by vector
     std::clock_t elapsedVec;
@@ -90,6 +81,15 @@ int main(int argc, char *argv[]) {
     std::deque<int> sortedByDeq = pmergeMe.mergeInsertSortByDeque();
     end = std::clock();
     elapsedDeq = end - start;
+
+    // Print original sequence
+    std::cout << "Before: ";
+    for (size_t i = 0; i < numbers.size(); ++i) {
+        std::cout << numbers[i];
+        if (i != numbers.size() - 1)
+            std::cout << " ";
+    }
+    std::cout << std::endl;
 
     // Print sorted sequence
     std::cout << "After:  ";
@@ -123,6 +123,9 @@ int main(int argc, char *argv[]) {
         assert(sortedByArgorithm[i] == sortedByVec[i]);
         assert(sortedByArgorithm[i] == sortedByDeq[i]);
     }
+    std::cout << "------------------------------------------------"
+              << std::endl;
+    std::cout << "Debug test passed." << std::endl;
 
 #endif
 
