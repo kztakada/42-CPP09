@@ -21,9 +21,15 @@ class PmergeMe {
 
     std::vector<int> _mergeInsertSortVector(std::vector<int> &vec);
     void _binaryInsert(std::vector<int> &vec, int value, int end);
+    void _insertWithJacobsthalOrder(
+        std::vector<int> &result, std::vector<int> const &smaller);
+    std::vector<size_t> _generateJacobsthalSequence(size_t n);
 
     std::deque<int> _mergeInsertSortDeque(std::deque<int> &deq);
     void _binaryInsert(std::deque<int> &deq, int value, int end);
+    void _insertWithJacobsthalOrder(
+        std::deque<int> &result, std::deque<int> const &smaller);
+    std::vector<size_t> _generateJacobsthalSequenceDeque(size_t n);
 };
 
 #endif /* PMERGEME_HPP */

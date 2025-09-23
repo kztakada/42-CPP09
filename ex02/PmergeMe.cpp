@@ -77,9 +77,10 @@ std::vector<int> PmergeMe::_mergeInsertSortVector(std::vector<int> &vec) {
         result.push_back(larger[i]);
     }
 
-    // Step 4: Insert remaining smaller elements using binary insertion
-    for (size_t i = 1; i < smaller.size(); ++i) {
-        _binaryInsert(result, smaller[i], result.size());
+    // Step 4: Insert remaining smaller elements using Jacobsthal order
+    if (smaller.size() > 1) {
+        std::vector<int> remainingSmaller(smaller.begin() + 1, smaller.end());
+        _insertWithJacobsthalOrder(result, remainingSmaller);
     }
 
     // Step 5: Insert odd element if it exists
@@ -147,9 +148,10 @@ std::deque<int> PmergeMe::_mergeInsertSortDeque(std::deque<int> &deq) {
         result.push_back(larger[i]);
     }
 
-    // Step 4: Insert remaining smaller elements using binary insertion
-    for (size_t i = 1; i < smaller.size(); ++i) {
-        _binaryInsert(result, smaller[i], result.size());
+    // Step 4: Insert remaining smaller elements using Jacobsthal order
+    if (smaller.size() > 1) {
+        std::deque<int> remainingSmaller(smaller.begin() + 1, smaller.end());
+        _insertWithJacobsthalOrder(result, remainingSmaller);
     }
 
     // Step 5: Insert odd element if it exists
@@ -173,4 +175,94 @@ void PmergeMe::_binaryInsert(std::deque<int> &deq, int value, int end) {
     }
 
     deq.insert(deq.begin() + left, value);
+}
+
+// Generate Jacobsthal sequence for insertion order: 1, 3, 5, 11, 21, 43, ...
+std::vector<size_t> PmergeMe::_generateJacobsthalSequence(size_t n) {
+    std::vector<size_t> jacobsthal;
+    if (n == 0)
+        return jacobsthal;
+
+    size_t j1 = 1;  // t_1 = 1
+    size_t j2 = 1;  // t_0 = 1
+    jacobsthal.push_back(j1);
+
+    while (j1 < n) {
+        size_t next = 2 * j1 + j2;  // t_k = 2 * t_{k-1} + t_{k-2}
+        if (next > n)
+            break;
+        jacobsthal.push_back(next);
+        j2 = j1;
+        j1 = next;
+    }
+
+    return jacobsthal;
+}
+
+std::vector<size_t> PmergeMe::_generateJacobsthalSequenceDeque(size_t n) {
+    return _generateJacobsthalSequence(n);
+}
+
+void PmergeMe::_insertWithJacobsthalOrder(
+    std::vector<int> &result, std::vector<int> const &smaller) {
+    if (smaller.empty())
+        return;
+
+    std::vector<size_t> jacobsthal =
+        _generateJacobsthalSequence(smaller.size());
+    std::vector<bool> inserted(smaller.size(), false);
+
+    // Insert elements according to Jacobsthal sequence
+    for (size_t i = 0; i < jacobsthal.size(); ++i) {
+        size_t groupEnd = jacobsthal[i];
+        size_t groupStart = (i == 0) ? 1 : jacobsthal[i - 1] + 1;
+
+        // Insert elements in reverse order within each group
+        for (size_t j = groupEnd; j >= groupStart && j <= smaller.size(); --j) {
+            size_t idx = j - 1;  // Convert to 0-based index
+            if (!inserted[idx]) {
+                _binaryInsert(result, smaller[idx], result.size());
+                inserted[idx] = true;
+            }
+        }
+    }
+
+    // Insert any remaining elements
+    for (size_t i = 0; i < smaller.size(); ++i) {
+        if (!inserted[i]) {
+            _binaryInsert(result, smaller[i], result.size());
+        }
+    }
+}
+
+void PmergeMe::_insertWithJacobsthalOrder(
+    std::deque<int> &result, std::deque<int> const &smaller) {
+    if (smaller.empty())
+        return;
+
+    std::vector<size_t> jacobsthal =
+        _generateJacobsthalSequenceDeque(smaller.size());
+    std::vector<bool> inserted(smaller.size(), false);
+
+    // Insert elements according to Jacobsthal sequence
+    for (size_t i = 0; i < jacobsthal.size(); ++i) {
+        size_t groupEnd = jacobsthal[i];
+        size_t groupStart = (i == 0) ? 1 : jacobsthal[i - 1] + 1;
+
+        // Insert elements in reverse order within each group
+        for (size_t j = groupEnd; j >= groupStart && j <= smaller.size(); --j) {
+            size_t idx = j - 1;  // Convert to 0-based index
+            if (!inserted[idx]) {
+                _binaryInsert(result, smaller[idx], result.size());
+                inserted[idx] = true;
+            }
+        }
+    }
+
+    // Insert any remaining elements
+    for (size_t i = 0; i < smaller.size(); ++i) {
+        if (!inserted[i]) {
+            _binaryInsert(result, smaller[i], result.size());
+        }
+    }
 }
