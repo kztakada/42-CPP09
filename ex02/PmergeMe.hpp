@@ -29,7 +29,7 @@ class PmergeMe {
     void _binaryInsert(std::deque<int> &deq, int value, int end);
     void _insertWithJacobsthalOrder(
         std::deque<int> &result, std::deque<int> const &smaller);
-    std::vector<size_t> _generateJacobsthalSequenceDeque(size_t n);
+    std::deque<size_t> _generateJacobsthalSequenceDeque(size_t n);
 };
 
 #endif /* PMERGEME_HPP */

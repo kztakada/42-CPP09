@@ -108,5 +108,23 @@ int main(int argc, char *argv[]) {
               << " elements with std::deque  :";
     printTime(elapsedDeq);
 
+#ifdef DEBUG
+    // Verify both sorted results are the same
+    std::vector<int> sortedByArgorithm = numbers;
+    std::sort(sortedByArgorithm.begin(), sortedByArgorithm.end());
+    for (size_t i = 0; i < sortedByArgorithm.size(); ++i) {
+        if (sortedByArgorithm[i] != sortedByVec[i] ||
+            sortedByArgorithm[i] != sortedByDeq[i]) {
+            std::cout << "argorithm: " << sortedByArgorithm[i]
+                      << ", vec: " << sortedByVec[i]
+                      << ", deq: " << sortedByDeq[i] << std::endl;
+        }
+
+        assert(sortedByArgorithm[i] == sortedByVec[i]);
+        assert(sortedByArgorithm[i] == sortedByDeq[i]);
+    }
+
+#endif
+
     return EXIT_SUCCESS;
 }

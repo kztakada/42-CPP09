@@ -199,8 +199,25 @@ std::vector<size_t> PmergeMe::_generateJacobsthalSequence(size_t n) {
     return jacobsthal;
 }
 
-std::vector<size_t> PmergeMe::_generateJacobsthalSequenceDeque(size_t n) {
-    return _generateJacobsthalSequence(n);
+std::deque<size_t> PmergeMe::_generateJacobsthalSequenceDeque(size_t n) {
+    std::deque<size_t> jacobsthal;
+    if (n == 0)
+        return jacobsthal;
+
+    size_t j1 = 1;  // t_1 = 1
+    size_t j2 = 1;  // t_0 = 1
+    jacobsthal.push_back(j1);
+
+    while (j1 < n) {
+        size_t next = 2 * j1 + j2;  // t_k = 2 * t_{k-1} + t_{k-2}
+        if (next > n)
+            break;
+        jacobsthal.push_back(next);
+        j2 = j1;
+        j1 = next;
+    }
+
+    return jacobsthal;
 }
 
 void PmergeMe::_insertWithJacobsthalOrder(
@@ -240,9 +257,9 @@ void PmergeMe::_insertWithJacobsthalOrder(
     if (smaller.empty())
         return;
 
-    std::vector<size_t> jacobsthal =
+    std::deque<size_t> jacobsthal =
         _generateJacobsthalSequenceDeque(smaller.size());
-    std::vector<bool> inserted(smaller.size(), false);
+    std::deque<bool> inserted(smaller.size(), false);
 
     // Insert elements according to Jacobsthal sequence
     for (size_t i = 0; i < jacobsthal.size(); ++i) {
