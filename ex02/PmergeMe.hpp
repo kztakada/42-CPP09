@@ -24,12 +24,10 @@ class PmergeMe {
 
     std::vector<std::pair<int, size_t> > _mergeInsertSortVector(
         std::vector<IndexedInt> &indexedVec);
-    void _binaryInsert(
-        std::vector<IndexedInt> &vec, const IndexedInt &value, int end);
     void _binaryInsertOptimized(
         std::vector<IndexedInt> &vec, const IndexedInt &value, int maxPos);
     void _insertWithJacobsthalOrder(std::vector<IndexedInt> &result,
-        std::vector<IndexedInt> const &smaller);
+        std::vector<std::pair<IndexedInt, size_t> > const &smaller);
     std::vector<size_t> _generateJacobsthalSequence(size_t n);
 
     std::deque<std::pair<int, size_t> > _mergeInsertSortDeque(
@@ -41,6 +39,15 @@ class PmergeMe {
     void _insertWithJacobsthalOrder(
         std::deque<IndexedInt> &result, std::deque<IndexedInt> const &smaller);
     std::deque<size_t> _generateJacobsthalSequenceDeque(size_t n);
+
+    // For debugging
+    int _countVectorCompare();
+    void _printCompare(int a, int b, const std::string &type);
+    void _printMainChain(
+        const std::vector<IndexedInt> &vec, const std::string &type);
+    void _printPending(
+        const std::vector<std::pair<IndexedInt, size_t> > &pending,
+        const std::string &type);
 };
 
 #endif /* PMERGEME_HPP */
