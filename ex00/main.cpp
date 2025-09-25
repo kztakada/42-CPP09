@@ -107,7 +107,6 @@ void testBitcoinExchange() {
 void testBCExchangeCases(BitcoinExchange bc) {
     // Test exchange method with valid input
     // 2021-01-02,32195.46
-    std::cout << bc.exchange("2021-01-02 | 999.999") << std::endl;
     assert(bc.exchange("2021-01-02 | 100") == "2021-01-02 => 100 = 3219546");
     assert(bc.exchange("2021-01-02 | 1000") == "2021-01-02 => 1000 = 32195460");
     assert(bc.exchange("2021-01-02 | 0") == "2021-01-02 => 0 = 0");
@@ -163,7 +162,6 @@ void testBCExchangeCases(BitcoinExchange bc) {
         bc.exchange("20 21-01-02 | 100");
         assert(false);  // Should not reach here
     } catch (std::invalid_argument &e) {
-        std::cout << e.what() << std::endl;
         assert(std::string(e.what()) == "bad input => 20 21-01-02 ");
     }
     try {

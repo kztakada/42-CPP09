@@ -6,8 +6,9 @@
 #include <utility>
 #include <vector>
 
-class PmergeMe {
-   public:
+class PmergeMe
+{
+public:
     PmergeMe();
     PmergeMe(std::vector<int> const &vec);
     ~PmergeMe();
@@ -17,7 +18,7 @@ class PmergeMe {
     std::vector<int> mergeInsertSortByVector();
     std::deque<int> mergeInsertSortByDeque();
 
-   private:
+private:
     std::vector<int> _unsortedVec;
     std::deque<int> _unsortedDeq;
 
@@ -27,7 +28,7 @@ class PmergeMe {
     std::vector<IndexedInt> _mergeInsertSortVector(
         std::vector<IndexedInt> &indexedVec);
     void _insertWithJacobsthalOrder(std::vector<IndexedInt> &mainChain,
-        std::vector<std::pair<IndexedInt, size_t> > const &pending);
+                                    std::vector<std::pair<IndexedInt, size_t> > const &pending);
     void _binaryInsertOptimized(
         std::vector<IndexedInt> &vec, const IndexedInt &value, int maxPos);
     std::vector<size_t> _generateJacobsthalSequence(size_t n);
@@ -36,7 +37,7 @@ class PmergeMe {
     std::deque<IndexedInt> _mergeInsertSortDeque(
         std::deque<IndexedInt> &indexedDeq);
     void _insertWithJacobsthalOrder(std::deque<IndexedInt> &mainChain,
-        std::deque<std::pair<IndexedInt, size_t> > const &pending);
+                                    std::deque<std::pair<IndexedInt, size_t> > const &pending);
     void _binaryInsertOptimized(
         std::deque<IndexedInt> &deq, const IndexedInt &value, int maxPos);
     std::deque<size_t> _generateJacobsthalSequenceDeque(size_t n);
@@ -47,25 +48,35 @@ class PmergeMe {
     void _printCompare(int a, int b, const std::string &type);
     template <typename IndexedIntContainer>
     void _printMainChain(
-        const IndexedIntContainer &container, const std::string &type) {
+        const IndexedIntContainer &container, const std::string &type)
+    {
 #ifdef DEBUG
         std::cout << type << "MainChain: ";
-        for (size_t i = 0; i < container.size(); ++i) {
+        for (size_t i = 0; i < container.size(); ++i)
+        {
             std::cout << container[i].first << " ";
         }
         std::cout << std::endl;
+#else
+        (void)container;
+        (void)type;
 #endif
     };
 
     template <typename PendingContainer>
     void _printPending(
-        const PendingContainer &pending, const std::string &type) {
+        const PendingContainer &pending, const std::string &type)
+    {
 #ifdef DEBUG
         std::cout << type << "Pending: ";
-        for (size_t i = 0; i < pending.size(); ++i) {
+        for (size_t i = 0; i < pending.size(); ++i)
+        {
             std::cout << pending[i].first.first << " ";
         }
         std::cout << std::endl;
+#else
+        (void)pending;
+        (void)type;
 #endif
     };
 };

@@ -446,5 +446,9 @@ void PmergeMe::_printCompare(int a, int b, const std::string &type) {
         _countVectorCompare();
     else if (type == "Deque ")
         _countDequeCompare();
+        #else
+        (void)a;
+        (void)b;
+        (void)type;
 #endif
 }
