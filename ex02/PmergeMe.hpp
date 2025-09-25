@@ -1,6 +1,7 @@
 #ifndef PMERGEME_HPP
 #define PMERGEME_HPP
 #include <deque>
+#include <iostream>
 #include <iterator>
 #include <utility>
 #include <vector>
@@ -22,32 +23,51 @@ class PmergeMe {
 
     typedef std::pair<int, size_t> IndexedInt;
 
-    std::vector<std::pair<int, size_t> > _mergeInsertSortVector(
+    // Vector implementations
+    std::vector<IndexedInt> _mergeInsertSortVector(
         std::vector<IndexedInt> &indexedVec);
+    void _insertWithJacobsthalOrder(std::vector<IndexedInt> &mainChain,
+        std::vector<std::pair<IndexedInt, size_t> > const &pending);
     void _binaryInsertOptimized(
         std::vector<IndexedInt> &vec, const IndexedInt &value, int maxPos);
-    void _insertWithJacobsthalOrder(std::vector<IndexedInt> &result,
-        std::vector<std::pair<IndexedInt, size_t> > const &smaller);
     std::vector<size_t> _generateJacobsthalSequence(size_t n);
 
-    std::deque<std::pair<int, size_t> > _mergeInsertSortDeque(
+    // Deque implementations
+    std::deque<IndexedInt> _mergeInsertSortDeque(
         std::deque<IndexedInt> &indexedDeq);
-    void _binaryInsert(
-        std::deque<IndexedInt> &deq, const IndexedInt &value, int end);
+    void _insertWithJacobsthalOrder(std::deque<IndexedInt> &mainChain,
+        std::deque<std::pair<IndexedInt, size_t> > const &pending);
     void _binaryInsertOptimized(
         std::deque<IndexedInt> &deq, const IndexedInt &value, int maxPos);
-    void _insertWithJacobsthalOrder(
-        std::deque<IndexedInt> &result, std::deque<IndexedInt> const &smaller);
     std::deque<size_t> _generateJacobsthalSequenceDeque(size_t n);
 
     // For debugging
     int _countVectorCompare();
+    int _countDequeCompare();
     void _printCompare(int a, int b, const std::string &type);
+    template <typename IndexedIntContainer>
     void _printMainChain(
-        const std::vector<IndexedInt> &vec, const std::string &type);
+        const IndexedIntContainer &container, const std::string &type) {
+#ifdef DEBUG
+        std::cout << type << "MainChain: ";
+        for (size_t i = 0; i < container.size(); ++i) {
+            std::cout << container[i].first << " ";
+        }
+        std::cout << std::endl;
+#endif
+    };
+
+    template <typename PendingContainer>
     void _printPending(
-        const std::vector<std::pair<IndexedInt, size_t> > &pending,
-        const std::string &type);
+        const PendingContainer &pending, const std::string &type) {
+#ifdef DEBUG
+        std::cout << type << "Pending: ";
+        for (size_t i = 0; i < pending.size(); ++i) {
+            std::cout << pending[i].first.first << " ";
+        }
+        std::cout << std::endl;
+#endif
+    };
 };
 
 #endif /* PMERGEME_HPP */
